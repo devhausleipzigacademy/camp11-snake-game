@@ -8,8 +8,59 @@
 		<link rel="stylesheet" href="./node_modules/reset-css/reset.css" />
 		<link rel="stylesheet" href="./src/style.css" />
 	</head>
-	<body>
-		<div id="game" style="">Test</div>
+	<body
+		style="
+			justify-content: center;
+			align-items: center;
+			display: flex;
+			flex-direction: column;
+			height: 100vh;
+		"
+	>
+		<h1 style="font-size: 60px; text-align: center">Snake 🐍</h1>
+		<div
+			id="game"
+			style="
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+			"
+		>
+			<div
+				id="game-grid"
+				style="
+					width: 800px;
+					height: 800px;
+					background-color: purple;
+					display: grid;
+					grid-template-columns: 21;
+					grid-template-rows: 21;
+				"
+			>
+				<!-- <div
+					style="
+						height: calc(800px / 21);
+						width: calc(800px / 21);
+						background-color: yellow;
+					"
+				></div> -->
+			</div>
+			<div
+				id="control-panel"
+				style="
+					background-color: green;
+					display: flex;
+					justify-content: space-around;
+					align-items: center;
+					width: 20rem;
+					height: 6rem;
+				"
+			>
+				<button id="pause-resume">Pause/Resume</button>
+				<button id="reset-button">Reset</button>
+			</div>
+		</div>
 		<script type="module" src="/src/main.ts"></script>
 	</body>
 </html>
