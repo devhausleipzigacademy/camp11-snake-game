@@ -1,0 +1,13 @@
+.grid-element {
+	background-color: black;
+	border: 1px solid grey;
+	font-size: small;
+}
+
+.snake {
+	background-color: green;
+}
+
+.apple {
+	background-color: red;
+}
