@@ -12,6 +12,9 @@ const directions: Record<DirectionEnum, coord2D> = {
 const rows = 21;
 const columns = 21;
 
+const appleBiteSound = new Audio("./public/sound/apple-bite.mp3");
+appleBiteSound.playbackRate = 3;
+
 function fillGrid() {
 	for (let row = 0; row < 21; row++) {
 		for (let col = 0; col < 21; col++) {
@@ -85,6 +88,7 @@ function endGame() {
 
 function eatApple() {
 	// sound effect to play
+	appleBiteSound.play();
 	// score to update
 	// remove apple from apples
 	// add new apple to apples
