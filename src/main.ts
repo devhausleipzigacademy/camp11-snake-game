@@ -83,6 +83,13 @@ function endGame() {
 	// TODO: show end game message
 }
 
+function eatApple() {
+	// sound effect to play
+	// score to update
+	// remove apple from apples
+	// add new apple to apples
+}
+
 function moveSnake() {
 	const snakeHead = idToCoord(snake[0]!);
 	const newSnakeHead = vec2ToroidAdd(snakeHead, directions[snakeDirection]);
@@ -92,6 +99,7 @@ function moveSnake() {
 
 	if (isSnakeCollission) {
 		endGame();
+		return;
 	}
 
 	if (isAppleCollission) {
