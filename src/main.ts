@@ -1,8 +1,7 @@
-const gameGrid = document.getElementById("game-grid")!;
-const scoreElement = document.getElementById("score")!;
-const pauseResumeButton = document.getElementById("pause-resume-button")!;
-const resetButton = document.getElementById("reset-button")!;
+import { coord2D, vec2ToroidAdd } from "./math";
+import { coordToId, idToCoord, styleElements } from "./utils";
 
+// definitions
 type DirectionEnum = "up" | "down" | "left" | "right";
 
 const directions: Record<DirectionEnum, coord2D> = {
@@ -12,19 +11,32 @@ const directions: Record<DirectionEnum, coord2D> = {
 	right: [0, 1]
 };
 
-let score = 0;
-
-function updateScore() {
-	score += 1;
-	scoreElement.textContent = `${score}`;
-}
-
-const rows = 21;
-const columns = 21;
+// setup
+const gameGrid = document.getElementById("game-grid")!;
+const scoreElement = document.getElementById("score")!;
+const pauseResumeButton = document.getElementById("pause-resume-button")!;
+const resetButton = document.getElementById("reset-button")!;
 
 const appleBiteSound = new Audio("./public/sound/apple-bite.mp3");
 appleBiteSound.playbackRate = 3;
 
+// define game configuration
+const rows = 21;
+const columns = 21;
+const gameLoopDelay = 100;
+
+// defining game state
+const defaultDirection: DirectionEnum = "up";
+const defaultSnake = ["9-10", "10-10", "11-10"];
+
+let stopped = false;
+let score = 0;
+let snakeDirection: DirectionEnum = defaultDirection;
+let snake = [...defaultSnake];
+let apples: string[] = [];
+generateApple();
+
+// grid functions
 function fillGrid() {
 	for (let row = 0; row < 21; row++) {
 		for (let col = 0; col < 21; col++) {
@@ -32,7 +44,6 @@ function fillGrid() {
 			newGridElement.id = `grid-${row}-${col}`;
 
 			newGridElement.classList.add("grid-element");
-			newGridElement.textContent = `${row}-${col}`;
 			gameGrid.append(newGridElement);
 		}
 	}
@@ -49,55 +60,20 @@ function resetGrid() {
 	fillGrid();
 }
 
-// Game State
-const defaultDirection: DirectionEnum = "up";
-
-let snakeDirection: DirectionEnum = defaultDirection;
-
-const defaultSnake = ["9-10", "10-10", "11-10"];
-let snake = [...defaultSnake];
-
-let apples: string[] = [];
-generateApple();
+// game update functions
+function updateScore() {
+	score += 1;
+	scoreElement.textContent = `${score}`;
+}
 
 function renderEntities() {
 	styleElements(snake, "snake");
 	styleElements(apples, "apple");
 }
 
-function coordToId(coord: coord2D) {
-	const [row, col] = coord;
-	return `${row}-${col}` as const;
-}
-
-function idToCoord(id: string) {
-	return id.split("-").map((comp) => Number(comp)) as coord2D;
-}
-
-function vec2PlaneAdd(a: coord2D, b: coord2D) {
-	const [rowA, colA] = a;
-	const [rowB, colB] = b;
-
-	return [rowA + rowB, colA + colB] as coord2D;
-}
-
-function modulo(a: number, b: number) {
-	return ((a % b) + b) % b;
-}
-
-function vec2ToroidAdd(a: coord2D, b: coord2D) {
-	const [rowA, colA] = a;
-	const [rowB, colB] = b;
-
-	return [modulo(rowA + rowB, rows), modulo(colA + colB, columns)] as coord2D;
-}
-
-type coord2D = [number, number];
-
 function endGame() {
 	stopped = true;
 	alert("Game Over");
-	// TODO: show end game message
 }
 
 function generateApple() {
@@ -131,7 +107,12 @@ function eatApple() {
 
 function moveSnake() {
 	const snakeHead = idToCoord(snake[0]!);
-	const newSnakeHead = vec2ToroidAdd(snakeHead, directions[snakeDirection]);
+	const newSnakeHead = vec2ToroidAdd(
+		snakeHead,
+		directions[snakeDirection],
+		rows,
+		columns
+	);
 
 	const isSnakeCollission = snake.includes(coordToId(newSnakeHead));
 	const isAppleCollission = apples.includes(coordToId(newSnakeHead));
@@ -150,15 +131,6 @@ function moveSnake() {
 	snake.unshift(coordToId(newSnakeHead)); // snake head added to snake
 }
 
-function styleElements(elements: string[], style: string) {
-	elements.forEach((element) => {
-		const gridElement = document.getElementById(`grid-${element}`);
-		gridElement?.classList.add(style);
-	});
-}
-
-const gameLoopDelay = 100;
-
 function updateGame() {
 	moveSnake();
 }
@@ -167,8 +139,6 @@ function renderGame() {
 	resetGrid();
 	renderEntities();
 }
-
-let stopped = false;
 
 function gameLoop() {
 	setTimeout(() => {
@@ -188,6 +158,7 @@ fillGrid();
 renderEntities();
 gameLoop();
 
+// UI event listeners
 document.addEventListener("keydown", (event) => {
 	const key = event.key;
 
