@@ -37,7 +37,11 @@ function resetGrid() {
 }
 
 // Game State
-let snakeDirection: DirectionEnum = "up";
+const defaultDirection: DirectionEnum = "up";
+
+let currentSnakeDirection: DirectionEnum = defaultDirection;
+let prevSnakeDirection: DirectionEnum = defaultDirection;
+
 const snake = ["9-10", "10-10", "11-10"];
 const apples = ["2-2"];
 
@@ -75,20 +79,33 @@ function vec2ToroidAdd(a: coord2D, b: coord2D) {
 
 type coord2D = [number, number];
 
-function checkSnakeSelfCollission() {
-	// TODO
-	// check if snake head is in snake
-	// if so, game over
-	// endGame()
+function checkSnakeCollission(entity: string) {
+	const isCollission = snake.includes(entity);
+
+	if (isCollission) {
+		endGame();
+	}
+}
+
+function checkAppleCollission(entity: string) {
+	const isCollission = apples.includes(entity);
+
+	if (isCollission) {
+		// eatApple()
+	}
 }
 
 function moveSnake() {
 	const snakeHead = idToCoord(snake[0]!);
-	const snakeTail = idToCoord(snake.pop()!); // snake tail removed from snake
+	snake.pop(); // snake tail removed from snake
 
-	const newSnakeHead = vec2ToroidAdd(snakeHead, directions[snakeDirection]);
+	const newSnakeHead = vec2ToroidAdd(
+		snakeHead,
+		directions[currentSnakeDirection]
+	);
 
-	checkSnakeSelfCollision(newSnakeHead);
+	checkSnakeCollission(coordToId(newSnakeHead));
+	checkAppleCollission(coordToId(newSnakeHead));
 
 	snake.unshift(coordToId(newSnakeHead)); // snake head added to snake
 }
@@ -130,12 +147,24 @@ document.addEventListener("keydown", (event) => {
 	const key = event.key;
 
 	if (key === "ArrowUp") {
-		snakeDirection = "up";
+		if (currentSnakeDirection === "down") {
+			return;
+		}
+		currentSnakeDirection = "up";
 	} else if (key === "ArrowDown") {
-		snakeDirection = "down";
+		if (currentSnakeDirection === "up") {
+			return;
+		}
+		currentSnakeDirection = "down";
 	} else if (key === "ArrowLeft") {
-		snakeDirection = "left";
+		if (prevSnakeDirection === "right") {
+			return;
+		}
+		currentSnakeDirection = "left";
 	} else if (key === "ArrowRight") {
-		snakeDirection = "right";
+		if (currentSnakeDirection === "left") {
+			return;
+		}
+		currentSnakeDirection = "right";
 	}
 });
