@@ -224,6 +224,7 @@ pauseResumeButton.addEventListener("click", () => {
 });
 
 resetButton.addEventListener("click", () => {
+	stopped = false;
 	score = 0;
 	snakeDirection = defaultDirection;
 	snake = [...defaultSnake];
