@@ -37,7 +37,7 @@ function resetGrid() {
 }
 
 // Game State
-const snakeDirection: DirectionEnum = "up";
+let snakeDirection: DirectionEnum = "up";
 const snake = ["9-10", "10-10", "11-10"];
 const apples = ["2-2"];
 
@@ -75,11 +75,21 @@ function vec2ToroidAdd(a: coord2D, b: coord2D) {
 
 type coord2D = [number, number];
 
+function checkSnakeSelfCollission() {
+	// TODO
+	// check if snake head is in snake
+	// if so, game over
+	// endGame()
+}
+
 function moveSnake() {
 	const snakeHead = idToCoord(snake[0]!);
 	const snakeTail = idToCoord(snake.pop()!); // snake tail removed from snake
 
 	const newSnakeHead = vec2ToroidAdd(snakeHead, directions[snakeDirection]);
+
+	checkSnakeSelfCollision(newSnakeHead);
+
 	snake.unshift(coordToId(newSnakeHead)); // snake head added to snake
 }
 
@@ -90,7 +100,7 @@ function styleElements(elements: string[], style: string) {
 	});
 }
 
-const gameLoopDelay = 100;
+const gameLoopDelay = 300;
 
 function updateGame() {
 	moveSnake();
@@ -115,3 +125,17 @@ function gameLoop() {
 fillGrid();
 renderEntities();
 gameLoop();
+
+document.addEventListener("keydown", (event) => {
+	const key = event.key;
+
+	if (key === "ArrowUp") {
+		snakeDirection = "up";
+	} else if (key === "ArrowDown") {
+		snakeDirection = "down";
+	} else if (key === "ArrowLeft") {
+		snakeDirection = "left";
+	} else if (key === "ArrowRight") {
+		snakeDirection = "right";
+	}
+});
