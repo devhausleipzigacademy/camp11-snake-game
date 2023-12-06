@@ -13,8 +13,8 @@ const rows = 21;
 const columns = 21;
 
 function fillGrid() {
-	for (let row = 1; row <= 21; row++) {
-		for (let col = 1; col <= 21; col++) {
+	for (let row = 0; row < 21; row++) {
+		for (let col = 0; col < 21; col++) {
 			const newGridElement = document.createElement("div");
 			newGridElement.id = `grid-${row}-${col}`;
 
@@ -38,7 +38,7 @@ function resetGrid() {
 
 // Game State
 const snakeDirection: DirectionEnum = "up";
-const snake = ["10-11", "11-11", "12-11"];
+const snake = ["9-10", "10-10", "11-10"];
 const apples = ["2-2"];
 
 function renderEntities() {
@@ -55,8 +55,22 @@ function idToCoord(id: string) {
 	return id.split("-").map((comp) => Number(comp)) as coord2D;
 }
 
-function vec2Add(a: coord2D, b: coord2D) {
-	return [a[0] + b[0], a[1] + b[1]] as coord2D;
+function vec2PlaneAdd(a: coord2D, b: coord2D) {
+	const [rowA, colA] = a;
+	const [rowB, colB] = b;
+
+	return [rowA + rowB, colA + colB] as coord2D;
+}
+
+function modulo(a: number, b: number) {
+	return ((a % b) + b) % b;
+}
+
+function vec2ToroidAdd(a: coord2D, b: coord2D) {
+	const [rowA, colA] = a;
+	const [rowB, colB] = b;
+
+	return [modulo(rowA + rowB, rows), modulo(colA + colB, columns)] as coord2D;
 }
 
 type coord2D = [number, number];
@@ -65,7 +79,7 @@ function moveSnake() {
 	const snakeHead = idToCoord(snake[0]!);
 	const snakeTail = idToCoord(snake.pop()!); // snake tail removed from snake
 
-	const newSnakeHead = vec2Add(snakeHead, directions[snakeDirection]);
+	const newSnakeHead = vec2ToroidAdd(snakeHead, directions[snakeDirection]);
 	snake.unshift(coordToId(newSnakeHead)); // snake head added to snake
 }
 
@@ -76,11 +90,28 @@ function styleElements(elements: string[], style: string) {
 	});
 }
 
+const gameLoopDelay = 100;
+
+function updateGame() {
+	moveSnake();
+}
+
+function renderGame() {
+	resetGrid();
+	renderEntities();
+}
+
+function gameLoop() {
+	setTimeout(() => {
+		requestAnimationFrame(() => {
+			updateGame();
+			renderGame();
+			gameLoop();
+		});
+	}, gameLoopDelay);
+}
+
 // initialize Game
 fillGrid();
 renderEntities();
-
-// test moving snake & rerendering new state
-moveSnake();
-resetGrid();
-renderEntities();
+gameLoop();
