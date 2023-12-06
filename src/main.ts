@@ -39,10 +39,8 @@ function resetGrid() {
 // Game State
 const defaultDirection: DirectionEnum = "up";
 
-let currentSnakeDirection: DirectionEnum = defaultDirection;
-let prevSnakeDirection: DirectionEnum = defaultDirection;
-
-const snake = ["9-10", "10-10", "11-10"];
+let snakeDirection: DirectionEnum = defaultDirection;
+const snake = ["9-10", "10-10", "11-10", "12-10", "13-10", "14-10", "15-10"];
 const apples = ["2-2"];
 
 function renderEntities() {
@@ -79,33 +77,28 @@ function vec2ToroidAdd(a: coord2D, b: coord2D) {
 
 type coord2D = [number, number];
 
-function checkSnakeCollission(entity: string) {
-	const isCollission = snake.includes(entity);
-
-	if (isCollission) {
-		endGame();
-	}
-}
-
-function checkAppleCollission(entity: string) {
-	const isCollission = apples.includes(entity);
-
-	if (isCollission) {
-		// eatApple()
-	}
+function endGame() {
+	stopped = true;
+	alert("Game Over");
+	// TODO: show end game message
 }
 
 function moveSnake() {
 	const snakeHead = idToCoord(snake[0]!);
-	snake.pop(); // snake tail removed from snake
+	const newSnakeHead = vec2ToroidAdd(snakeHead, directions[snakeDirection]);
 
-	const newSnakeHead = vec2ToroidAdd(
-		snakeHead,
-		directions[currentSnakeDirection]
-	);
+	const isSnakeCollission = snake.includes(coordToId(newSnakeHead));
+	const isAppleCollission = apples.includes(coordToId(newSnakeHead));
 
-	checkSnakeCollission(coordToId(newSnakeHead));
-	checkAppleCollission(coordToId(newSnakeHead));
+	if (isSnakeCollission) {
+		endGame();
+	}
+
+	if (isAppleCollission) {
+		eatApple();
+	} else {
+		snake.pop(); // snake tail removed from snake
+	}
 
 	snake.unshift(coordToId(newSnakeHead)); // snake head added to snake
 }
@@ -128,12 +121,17 @@ function renderGame() {
 	renderEntities();
 }
 
+let stopped = false;
+
 function gameLoop() {
 	setTimeout(() => {
 		requestAnimationFrame(() => {
 			updateGame();
 			renderGame();
-			gameLoop();
+
+			if (!stopped) {
+				gameLoop();
+			}
 		});
 	}, gameLoopDelay);
 }
@@ -147,24 +145,24 @@ document.addEventListener("keydown", (event) => {
 	const key = event.key;
 
 	if (key === "ArrowUp") {
-		if (currentSnakeDirection === "down") {
+		if (snakeDirection === "down") {
 			return;
 		}
-		currentSnakeDirection = "up";
+		snakeDirection = "up";
 	} else if (key === "ArrowDown") {
-		if (currentSnakeDirection === "up") {
+		if (snakeDirection === "up") {
 			return;
 		}
-		currentSnakeDirection = "down";
+		snakeDirection = "down";
 	} else if (key === "ArrowLeft") {
-		if (prevSnakeDirection === "right") {
+		if (snakeDirection === "right") {
 			return;
 		}
-		currentSnakeDirection = "left";
+		snakeDirection = "left";
 	} else if (key === "ArrowRight") {
-		if (currentSnakeDirection === "left") {
+		if (snakeDirection === "left") {
 			return;
 		}
-		currentSnakeDirection = "right";
+		snakeDirection = "right";
 	}
 });
