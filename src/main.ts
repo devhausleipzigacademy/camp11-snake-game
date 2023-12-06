@@ -43,7 +43,7 @@ function resetGrid() {
 const defaultDirection: DirectionEnum = "up";
 
 let snakeDirection: DirectionEnum = defaultDirection;
-const snake = ["9-10", "10-10", "11-10", "12-10", "13-10", "14-10", "15-10"];
+const snake = ["9-10", "10-10", "11-10"];
 const apples = ["2-2"];
 
 function renderEntities() {
@@ -86,12 +86,35 @@ function endGame() {
 	// TODO: show end game message
 }
 
+function generateApple() {
+	let noValidApple = true;
+
+	while (noValidApple) {
+		const newApple = [
+			Math.floor(Math.random() * 21),
+			Math.floor(Math.random() * 21)
+		] as coord2D;
+
+		const newAppleId = coordToId(newApple);
+
+		const isSnakeCollission = snake.includes(newAppleId);
+		const isAppleCollission = apples.includes(newAppleId);
+
+		if (!isSnakeCollission && !isAppleCollission) {
+			noValidApple = false;
+			apples.push(newAppleId);
+		}
+	}
+}
+
 function eatApple() {
 	// sound effect to play
 	appleBiteSound.play();
 	// score to update
 	// remove apple from apples
+	apples.pop(); // remove the first apple of the apple
 	// add new apple to apples
+	generateApple();
 }
 
 function moveSnake() {
