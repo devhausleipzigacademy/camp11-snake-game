@@ -1,4 +1,7 @@
 const gameGrid = document.getElementById("game-grid")!;
+const scoreElement = document.getElementById("score")!;
+const pauseResumeButton = document.getElementById("pause-resume-button")!;
+const resetButton = document.getElementById("reset-button")!;
 
 type DirectionEnum = "up" | "down" | "left" | "right";
 
@@ -8,6 +11,13 @@ const directions: Record<DirectionEnum, coord2D> = {
 	left: [0, -1],
 	right: [0, 1]
 };
+
+let score = 0;
+
+function updateScore() {
+	score += 1;
+	scoreElement.textContent = `${score}`;
+}
 
 const rows = 21;
 const columns = 21;
@@ -43,8 +53,12 @@ function resetGrid() {
 const defaultDirection: DirectionEnum = "up";
 
 let snakeDirection: DirectionEnum = defaultDirection;
-const snake = ["9-10", "10-10", "11-10"];
-const apples = ["2-2"];
+
+const defaultSnake = ["9-10", "10-10", "11-10"];
+let snake = [...defaultSnake];
+
+let apples: string[] = [];
+generateApple();
 
 function renderEntities() {
 	styleElements(snake, "snake");
@@ -108,12 +122,10 @@ function generateApple() {
 }
 
 function eatApple() {
-	// sound effect to play
 	appleBiteSound.play();
 	// score to update
-	// remove apple from apples
-	apples.pop(); // remove the first apple of the apple
-	// add new apple to apples
+	apples.pop(); // remove the first apple of the apples array
+	updateScore();
 	generateApple();
 }
 
@@ -145,7 +157,7 @@ function styleElements(elements: string[], style: string) {
 	});
 }
 
-const gameLoopDelay = 300;
+const gameLoopDelay = 100;
 
 function updateGame() {
 	moveSnake();
@@ -200,4 +212,23 @@ document.addEventListener("keydown", (event) => {
 		}
 		snakeDirection = "right";
 	}
+});
+
+pauseResumeButton.addEventListener("click", () => {
+	if (stopped) {
+		stopped = false;
+		gameLoop();
+	} else {
+		stopped = true;
+	}
+});
+
+resetButton.addEventListener("click", () => {
+	score = 0;
+	snakeDirection = defaultDirection;
+	snake = [...defaultSnake];
+	apples = [];
+	generateApple();
+	resetGrid();
+	scoreElement.textContent = `${score}`;
 });

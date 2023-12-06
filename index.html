@@ -37,14 +37,21 @@
 					grid-template-columns: repeat(21, 1fr);
 					grid-template-rows: repeat(21, 1fr);
 				"
+			></div>
+			<div
+				id="score-board"
+				style="
+					width: 20rem;
+					height: 3rem;
+					background-color: brown;
+					display: flex;
+					justify-content: center;
+					align-items: center;
+				"
 			>
-				<!-- <div
-					style="
-						height: calc(800px / 21);
-						width: calc(800px / 21);
-						background-color: yellow;
-					"
-				></div> -->
+				<p style="color: blanchedalmond">
+					Score: <span id="score">0</span>
+				</p>
 			</div>
 			<div
 				id="control-panel"
@@ -57,7 +64,7 @@
 					height: 6rem;
 				"
 			>
-				<button id="pause-resume">Pause/Resume</button>
+				<button id="pause-resume-button">Pause/Resume</button>
 				<button id="reset-button">Reset</button>
 			</div>
 		</div>
