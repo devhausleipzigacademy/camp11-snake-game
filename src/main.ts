@@ -254,3 +254,10 @@ game = new SnakeGame(
 	appleBiteSound
 );
 game.init();
+
+////////////////////////
+
+// create an HTML Input Element that allows numbers only
+// make sure this input element is passed to the 'Snake' constructor as an argument
+// create an event listener that listens for the onChange event of the input element and changes the gameLoopDelay property of the game object
+// make sure the eventListener is mounted when the game is initialized, and unmounted when the game is reset
