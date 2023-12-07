@@ -11,196 +11,246 @@ const directions: Record<DirectionEnum, coord2D> = {
 	right: [0, 1]
 };
 
-// setup
+////////////////////////
+
+let game;
+
+class SnakeGame {
+	stopped: boolean = false;
+	score: number = 0;
+	snakeDirection: DirectionEnum = "up";
+	snake: Array<string> = ["grid-9-10", "grid-10-10", "grid-11-10"];
+	apples: Array<string> = [];
+	rows: number = 21;
+	columns: number = 21;
+	gameLoopDelay: number = 100;
+
+	constructor(
+		public gameGrid: HTMLElement,
+		public scoreElement: HTMLElement,
+		public pauseResumeButton: HTMLElement,
+		public resetButton: HTMLElement,
+		public appleBiteSound: HTMLAudioElement
+	) {
+		this.gameGrid = gameGrid;
+		this.scoreElement = scoreElement;
+		this.pauseResumeButton = pauseResumeButton;
+		this.resetButton = resetButton;
+		this.appleBiteSound = appleBiteSound;
+	}
+
+	init() {
+		this.generateApple();
+		this.fillGrid();
+		this.mountEventListeners();
+		this.gameLoop();
+	}
+
+	fillGrid() {
+		for (let row = 0; row < 21; row++) {
+			for (let col = 0; col < 21; col++) {
+				const newGridElement = document.createElement("div");
+				newGridElement.id = `grid-${row}-${col}`;
+
+				newGridElement.classList.add("grid-element");
+				this.gameGrid.append(newGridElement);
+			}
+		}
+	}
+
+	emptyGrid() {
+		while (gameGrid.firstChild) {
+			gameGrid.removeChild(gameGrid.firstChild);
+		}
+	}
+
+	resetGrid() {
+		this.emptyGrid();
+		this.fillGrid();
+	}
+
+	updateScore() {
+		this.score += 1;
+		scoreElement.textContent = `${this.score}`;
+	}
+
+	renderEntities() {
+		styleElements(this.snake, "snake");
+		styleElements(this.apples, "apple");
+	}
+
+	endGame() {
+		this.stopped = true;
+		alert("Game Over");
+	}
+
+	generateApple() {
+		let noValidApple = true;
+
+		while (noValidApple) {
+			const newApple = [
+				Math.floor(Math.random() * 21),
+				Math.floor(Math.random() * 21)
+			] as coord2D;
+
+			const newAppleId = coordToId(newApple);
+
+			const isSnakeCollission = this.snake.includes(newAppleId);
+			const isAppleCollission = this.apples.includes(newAppleId);
+
+			if (!isSnakeCollission && !isAppleCollission) {
+				noValidApple = false;
+				this.apples.push(newAppleId);
+			}
+		}
+	}
+
+	eatApple() {
+		appleBiteSound.play();
+		// score to update
+		this.apples.pop(); // remove the first apple of the apples array
+		this.updateScore();
+		this.generateApple();
+	}
+
+	moveSnake() {
+		const snakeHead = idToCoord(this.snake[0]!);
+		const newSnakeHead = vec2ToroidAdd(
+			snakeHead,
+			directions[this.snakeDirection],
+			this.rows,
+			this.columns
+		);
+
+		const isSnakeCollission = this.snake.includes(coordToId(newSnakeHead));
+		const isAppleCollission = this.apples.includes(coordToId(newSnakeHead));
+
+		if (isSnakeCollission) {
+			this.endGame();
+			return;
+		}
+
+		if (isAppleCollission) {
+			this.eatApple();
+		} else {
+			this.snake.pop(); // snake tail removed from snake
+		}
+
+		this.snake.unshift(coordToId(newSnakeHead)); // snake head added to snake
+	}
+
+	updateGame() {
+		this.moveSnake();
+	}
+
+	renderGame() {
+		this.resetGrid();
+		this.renderEntities();
+	}
+
+	gameLoop() {
+		setTimeout(() => {
+			requestAnimationFrame(() => {
+				this.updateGame();
+				this.renderGame();
+
+				if (!this.stopped) {
+					this.gameLoop();
+				}
+			});
+		}, this.gameLoopDelay);
+	}
+
+	controlEventListeners(event: KeyboardEvent) {
+		const key = event.key;
+
+		if (key === "ArrowUp") {
+			if (this.snakeDirection === "down") {
+				return;
+			}
+			this.snakeDirection = "up";
+		} else if (key === "ArrowDown") {
+			if (this.snakeDirection === "up") {
+				return;
+			}
+			this.snakeDirection = "down";
+		} else if (key === "ArrowLeft") {
+			if (this.snakeDirection === "right") {
+				return;
+			}
+			this.snakeDirection = "left";
+		} else if (key === "ArrowRight") {
+			if (this.snakeDirection === "left") {
+				return;
+			}
+			this.snakeDirection = "right";
+		}
+	}
+
+	pauseResumeEventListeners() {
+		if (this.stopped) {
+			this.stopped = false;
+			this.gameLoop();
+		} else {
+			this.stopped = true;
+		}
+	}
+
+	resetEventListeners() {
+		this.stopped = true;
+		this.unmountEventListeners();
+
+		game = new SnakeGame(
+			gameGrid,
+			scoreElement,
+			pauseResumeButton,
+			resetButton,
+			appleBiteSound
+		);
+		game.init();
+	}
+
+	mountEventListeners() {
+		document.addEventListener(
+			"keydown",
+			this.controlEventListeners.bind(this)
+		);
+		pauseResumeButton.addEventListener(
+			"click",
+			this.pauseResumeEventListeners.bind(this)
+		);
+		resetButton.addEventListener(
+			"click",
+			this.resetEventListeners.bind(this)
+		);
+	}
+
+	unmountEventListeners() {
+		document.removeEventListener(
+			"keydown",
+			this.controlEventListeners.bind(this)
+		);
+		pauseResumeButton.removeEventListener(
+			"click",
+			this.pauseResumeEventListeners
+		);
+		resetButton.removeEventListener("click", this.resetEventListeners);
+	}
+}
+
 const gameGrid = document.getElementById("game-grid")!;
 const scoreElement = document.getElementById("score")!;
 const pauseResumeButton = document.getElementById("pause-resume-button")!;
 const resetButton = document.getElementById("reset-button")!;
 
-const appleBiteSound = new Audio("./public/sound/apple-bite.mp3");
+const appleBiteSound = new Audio("./sound/apple-bite.mp3");
 appleBiteSound.playbackRate = 3;
 
-// define game configuration
-const rows = 21;
-const columns = 21;
-const gameLoopDelay = 100;
-
-// defining game state
-const defaultDirection: DirectionEnum = "up";
-const defaultSnake = ["9-10", "10-10", "11-10"];
-
-let stopped = false;
-let score = 0;
-let snakeDirection: DirectionEnum = defaultDirection;
-let snake = [...defaultSnake];
-let apples: string[] = [];
-generateApple();
-
-// grid functions
-function fillGrid() {
-	for (let row = 0; row < 21; row++) {
-		for (let col = 0; col < 21; col++) {
-			const newGridElement = document.createElement("div");
-			newGridElement.id = `grid-${row}-${col}`;
-
-			newGridElement.classList.add("grid-element");
-			gameGrid.append(newGridElement);
-		}
-	}
-}
-
-function emptyGrid() {
-	while (gameGrid.firstChild) {
-		gameGrid.removeChild(gameGrid.firstChild);
-	}
-}
-
-function resetGrid() {
-	emptyGrid();
-	fillGrid();
-}
-
-// game update functions
-function updateScore() {
-	score += 1;
-	scoreElement.textContent = `${score}`;
-}
-
-function renderEntities() {
-	styleElements(snake, "snake");
-	styleElements(apples, "apple");
-}
-
-function endGame() {
-	stopped = true;
-	alert("Game Over");
-}
-
-function generateApple() {
-	let noValidApple = true;
-
-	while (noValidApple) {
-		const newApple = [
-			Math.floor(Math.random() * 21),
-			Math.floor(Math.random() * 21)
-		] as coord2D;
-
-		const newAppleId = coordToId(newApple);
-
-		const isSnakeCollission = snake.includes(newAppleId);
-		const isAppleCollission = apples.includes(newAppleId);
-
-		if (!isSnakeCollission && !isAppleCollission) {
-			noValidApple = false;
-			apples.push(newAppleId);
-		}
-	}
-}
-
-function eatApple() {
-	appleBiteSound.play();
-	// score to update
-	apples.pop(); // remove the first apple of the apples array
-	updateScore();
-	generateApple();
-}
-
-function moveSnake() {
-	const snakeHead = idToCoord(snake[0]!);
-	const newSnakeHead = vec2ToroidAdd(
-		snakeHead,
-		directions[snakeDirection],
-		rows,
-		columns
-	);
-
-	const isSnakeCollission = snake.includes(coordToId(newSnakeHead));
-	const isAppleCollission = apples.includes(coordToId(newSnakeHead));
-
-	if (isSnakeCollission) {
-		endGame();
-		return;
-	}
-
-	if (isAppleCollission) {
-		eatApple();
-	} else {
-		snake.pop(); // snake tail removed from snake
-	}
-
-	snake.unshift(coordToId(newSnakeHead)); // snake head added to snake
-}
-
-function updateGame() {
-	moveSnake();
-}
-
-function renderGame() {
-	resetGrid();
-	renderEntities();
-}
-
-function gameLoop() {
-	setTimeout(() => {
-		requestAnimationFrame(() => {
-			updateGame();
-			renderGame();
-
-			if (!stopped) {
-				gameLoop();
-			}
-		});
-	}, gameLoopDelay);
-}
-
-// initialize Game
-fillGrid();
-renderEntities();
-gameLoop();
-
-// UI event listeners
-document.addEventListener("keydown", (event) => {
-	const key = event.key;
-
-	if (key === "ArrowUp") {
-		if (snakeDirection === "down") {
-			return;
-		}
-		snakeDirection = "up";
-	} else if (key === "ArrowDown") {
-		if (snakeDirection === "up") {
-			return;
-		}
-		snakeDirection = "down";
-	} else if (key === "ArrowLeft") {
-		if (snakeDirection === "right") {
-			return;
-		}
-		snakeDirection = "left";
-	} else if (key === "ArrowRight") {
-		if (snakeDirection === "left") {
-			return;
-		}
-		snakeDirection = "right";
-	}
-});
-
-pauseResumeButton.addEventListener("click", () => {
-	if (stopped) {
-		stopped = false;
-		gameLoop();
-	} else {
-		stopped = true;
-	}
-});
-
-resetButton.addEventListener("click", () => {
-	stopped = false;
-	score = 0;
-	snakeDirection = defaultDirection;
-	snake = [...defaultSnake];
-	apples = [];
-	generateApple();
-	resetGrid();
-	scoreElement.textContent = `${score}`;
-});
+game = new SnakeGame(
+	gameGrid,
+	scoreElement,
+	pauseResumeButton,
+	resetButton,
+	appleBiteSound
+);
+game.init();
